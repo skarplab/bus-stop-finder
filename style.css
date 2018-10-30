@@ -1,0 +1,9 @@
+#main-section {
+    width: 80%;
+    margin: 20px auto;
+}
+
+#map {
+    height: 40vh;
+    min-height: 600px;
+}
