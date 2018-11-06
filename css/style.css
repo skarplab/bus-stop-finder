@@ -1,0 +1,36 @@
+# Empty CSS file for your own CSS
+body {
+    height: 100vh;
+
+}
+#main-container-fluid {
+    padding: 0;
+    margin:0;
+    height: 100%;
+}
+#navbar-col {
+    margin: 0;
+}
+#main-row {
+    min-height: 100%;
+    margin: 0;
+}
+#park-table-col {
+    max-height: 80vh;
+    overflow-y: scroll;
+}
+#info-panel-col {
+    padding: 0;
+}
+#map-row {
+    margin: 15px 0px;
+}
+#map-container {
+    min-height: 600px;
+}
+#map {
+    height: 100%;
+    min-height: 100%;
+    width: 100%;
+    min-width: 100%
+}

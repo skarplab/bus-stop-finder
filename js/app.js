@@ -1,7 +1,7 @@
 let parksUrl = 'https://services.arcgis.com/v400IkDOw1ad7Yad/arcgis/rest/services/Parks/FeatureServer/0/query?where=DEVELOPED+%3D+%27Developed%27&outFields=PARKID%2CNAME%2CADDRESS%2CZIP_CODE%2CALTERNATE_ADDRESS&returnGeometry=true&geometryPrecision=6&outSR=4326&orderByFields=NAME&f=geojson';
 let parksJSON;
 
-let stopsUrl = 'https://services.arcgis.com/v400IkDOw1ad7Yad/arcgis/rest/services/GoRaleigh_Stops/FeatureServer/0/query?where=1%3D1&outFields=Sequence%2CStopId%2CStopAbbr%2CStopName%2CLineAbbr%2CLineType&returnGeometry=true&outSR=4326&orderByFields=StopId&f=geojson';
+let stopsUrl = 'https://services.arcgis.com/v400IkDOw1ad7Yad/arcgis/rest/services/GoRaleigh_Stops/FeatureServer/0/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&orderByFields=StopId&f=geojson';
 let stopsJSON;
 
 let nsaUrl = 'https://services.arcgis.com/v400IkDOw1ad7Yad/arcgis/rest/services/Raleigh_Parks_Half_Mile_Network_Service_Areas/FeatureServer/0/query?where=1%3D1&outFields=PARKID%2C+NAME&returnGeometry=true&geometryPrecision=6&outSR=4326&orderByFields=PARKID&f=geojson';
@@ -14,6 +14,15 @@ let basemap = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager
 	subdomains: 'abcd',
 	maxZoom: 19
 }).addTo(map);
+
+let stopPropertiesCategories = {
+    stop: ['StopId', 'StopAbbr', 'StopName', 'StopName', 'NodeAbbr', 'OnStreet', 'AtStreet',
+    'Unit', 'City', 'State', 'ZipCode', 'Lon', 'Lat', 'Bench', 'Shelter', 'Lighting',
+    'Garbage', 'Bicycle', 'CATStop', 'NodeId', 'NodeName'],
+    line: ['FID', 'Sequence', 'LineAbbr', 'LineName', 'LineType'],
+    toss: ['GpsLon', 'GpsLat', 'DATAStop', 'TTAStop', 'NodeAbbr_1', 'tpField00']
+}
+
 
 Promise.all([
     d3.json(parksUrl),
@@ -36,7 +45,8 @@ Promise.all([
                 fillOpacity: 0,
                 radius: 3
             })
-        }
+        },
+        onEachFeature: markerPopup
     }).addTo(map);
 
     nsaLayer = L.geoJson(nsaData, {
@@ -45,16 +55,41 @@ Promise.all([
         color: 'black',
         opacity: 1
     });
-
+    
     let parkNameArray = parksData.features.map(x => x.properties.NAME);
     let parkIDArray = parksData.features.map(x => x.properties.PARKID);
 
-    let parkList = document.getElementById('park-list')
+    let parkList = document.getElementById('park-table-body')
     parkNameArray.forEach(function(item, idx) {
-        let li = document.createElement('li');
-        li.value = parkIDArray[idx];
-        li.appendChild(document.createTextNode(item));
-        parkList.appendChild(li);
+        let tr = document.createElement('tr');
+        let td = document.createElement('td');
+        td.value = parkIDArray[idx];
+        td.appendChild(document.createTextNode(item));
+        tr.appendChild(td);
+        parkList.appendChild(tr);
     })
 
 });
+
+function markerPopup(feature, layer) {
+    let featureProperties = feature.properties;
+    let popupHtml = '';
+    for(let property in featureProperties) {
+       popupHtml+=`<b>${property}:</b> ${featureProperties[property]}<br>`
+    }
+    layer.bindPopup(popupHtml)
+  }
+
+function removeProperties(array, ...removeProperties){
+let filteredArray = []
+array.forEach(function(item){
+    for (let property in item) {
+    if(removeProperties.flat().includes(property)) {
+        delete item[property]
+    }
+    }
+    filteredArray.push(item)
+})
+
+return filteredArray
+}
