@@ -74,7 +74,10 @@ Promise.all([
         weight: 0,       
     }).addTo(map);
 
-    stopsLayer = L.geoJson(stopsData, {
+    // Generate and unique stops data//
+    uniqueStopsArray = getUniqueLocations(stopsData.features, 'properties', 'StopId', lineFieldsArray)
+    uniqueStopsGeojson = turf.featureCollection(uniqueStopsArray);
+    uniqueStopsLayer = L.geoJson(uniqueStopsGeojson, {
         pointToLayer: function(feature, latlng) {
             return L.circleMarker(latlng, {
                 color: 'black',
@@ -141,3 +144,41 @@ function removeProperties(array, ...removeProperties){
 
     return filteredArray
 }
+
+function getUniqueLocations(fullArray, attributeKey, idKey, ...removeProperties){
+    // Generate an array of unique locations from fullArray   
+    let uniqueLocationsArray = []
+    let uniqueIdsArray = []
+    fullArray.forEach(function(item) {
+        if(!uniqueIdsArray.includes(item[attributeKey][idKey])) {
+            uniqueLocationsArray.push(item)
+            uniqueIdsArray.push(item[attributeKey][idKey])
+        }
+    })
+    
+    // Remove any properties that we don't want
+    uniqueLocationsArray.forEach(function(item){
+        let properties = item.properties
+        for (let property in properties) {
+            if(removeProperties.flat().includes(property)){
+                delete properties[property]
+            }
+        }
+    })
+    
+    return uniqueLocationsArray
+}
+
+function removeProperties(array, ...removeProperties){
+    let filteredArray = []
+    array.forEach(function(item){
+      for (let property in item) {
+        if(removeProperties.flat().includes(property)) {
+          delete item[property]
+        }
+      }
+      filteredArray.push(item)
+    })
+    
+    return filteredArray
+  }
