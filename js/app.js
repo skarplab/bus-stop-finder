@@ -56,6 +56,9 @@ let basemap = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager
 	subdomains: 'abcd',
 	maxZoom: 19
 }).addTo(map);
+let selectedParkGroup = L.featureGroup().addTo(map);
+let selectedParkNSAGroup = L.featureGroup().addTo(map);
+let nearbyStopsGroup = L.featureGroup().addTo(map);
 
 ////////////////
 // LOAD DATA //
@@ -71,7 +74,8 @@ Promise.all([
     parksLayer = L.geoJson(parksData, {
         fillColor: '#1B5E20',
         fillOpacity: 0.4,
-        weight: 0,       
+        weight: 0,
+        onEachFeature: markerPopup       
     }).addTo(map);
 
     // Generate and unique stops data//
@@ -89,7 +93,7 @@ Promise.all([
         },
         onEachFeature: markerPopup
     }).addTo(map);
-
+    
     nsaLayer = L.geoJson(nsaData, {
         fillOpacity: 0,
         weight: 0.5,
@@ -105,12 +109,51 @@ Promise.all([
         let tr = document.createElement('tr');
         let td = document.createElement('td');
         td.value = parkIDArray[idx];
+        td.className = "parks-list-data";
         td.appendChild(document.createTextNode(item));
         tr.appendChild(td);
         parkList.appendChild(tr);
-    })
+    });
+    parksListEntries = document.getElementsByClassName('parks-list-data');
+    for (let i = 0; i < parksListEntries.length; i++){
+        parksListEntries[i].addEventListener('click', function() {
 
+            selectedParkGroup.clearLayers();
+            selectedParkNSAGroup.clearLayers();
+            nearbyStopsGroup.clearLayers();
+
+            selectedParkLayer = L.geoJson(parksData, {
+                filter: function(feature) {
+                    if (feature.properties.PARKID === parksListEntries[i].value) return true
+                },
+                fillOpacity: 0,
+                color: 'yellow'
+            });
+            selectedParkGroup.addLayer(selectedParkLayer);
+
+            //TODO: Clean this up. There has to be a better way to convert a polygon into a lineString.
+            selectedParkNSAFilter = L.geoJson(nsaData, {
+                filter: function(feature) {
+                    if (feature.properties.PARKID === parksListEntries[i].value) return true
+                }
+            });
+            selectedParkNSAPolygon = selectedParkNSAFilter.toGeoJSON()
+            console.log(selectedParkNSAPolygon.features[0].geometry.coordinates)
+            selectedParkNSALine = turf.lineString(selectedParkNSAPolygon.features[0].geometry.coordinates[0])
+            selectedParkNSALineLayer = L.geoJson(selectedParkNSALine, {
+                weight: 0.5,
+                color: 'black',
+                opacity: 1
+            }).addTo(map) 
+            selectedParkNSAGroup.addLayer(selectedParkNSALineLayer);
+
+
+            map.fitBounds(selectedParkNSAGroup.getBounds())
+        })
+    }
 });
+
+
 ////////////////
 // FUNCTIONS //
 //////////////
