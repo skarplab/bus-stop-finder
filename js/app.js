@@ -121,7 +121,9 @@ Promise.all([
             selectedParkGroup.clearLayers();
             selectedParkNSAGroup.clearLayers();
             nearbyStopsGroup.clearLayers();
-
+            
+            let parkNameHeader = document.getElementById('selected-park-name');
+            parkNameHeader.innerHTML = parksListEntries[i].innerHTML
             selectedParkLayer = L.geoJson(parksData, {
                 filter: function(feature) {
                     if (feature.properties.PARKID === parksListEntries[i].value) return true
